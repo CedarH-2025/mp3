@@ -46,11 +46,10 @@ exports.replaceTask = async function (req, res) {
 };
 
 exports.deleteTask = async function (req, res) {
-    const data = await mongoose.connection.transaction(async session => {
+    await mongoose.connection.transaction(async session => {
         const task = await getById(Task, req.params.id, 'Task', session);
         await User.updateMany({ pendingTasks: task.id }, { $pull: { pendingTasks: task.id } }, { session });
         await task.deleteOne({ session });
-        return task.toObject();
     });
-    res.json({ message: 'Task deleted.', data });
+    res.status(204).end();
 };

@@ -57,14 +57,13 @@ exports.replaceUser = async function (req, res) {
 };
 
 exports.deleteUser = async function (req, res) {
-    const data = await mongoose.connection.transaction(async session => {
+    await mongoose.connection.transaction(async session => {
         const user = await getById(User, req.params.id, 'User', session);
         await Task.updateMany(
             { assignedUser: user.id },
             { $set: { assignedUser: '', assignedUserName: 'unassigned' } }, { session }
         );
         await user.deleteOne({ session });
-        return user.toObject();
     });
-    res.json({ message: 'User deleted.', data });
+    res.status(204).end();
 };

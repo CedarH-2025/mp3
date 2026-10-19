@@ -54,6 +54,11 @@ test('API integration tests against an isolated database', async t => {
                     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
                 })
             });
+            if (status === 204) {
+                assert.equal(response.status, 204);
+                assert.equal(await response.text(), '');
+                return;
+            }
             const result = await response.json();
             assert.equal(response.status, status, `${method} ${path}: ${JSON.stringify(result)}`);
             assert.equal(typeof result.message, 'string');
@@ -179,12 +184,12 @@ test('API integration tests against an isolated database', async t => {
         await run('deletion removes references including completed assignments', async () => {
             const a = await user('Alice');
             const item = await task('Work', { assignedUser: a._id });
-            await request('DELETE', `/tasks/${item._id}`);
+            await request('DELETE', `/tasks/${item._id}`, undefined, 204);
             await request('GET', `/tasks/${item._id}`, undefined, 404);
             assert.deepEqual((await request('GET', `/users/${a._id}`)).pendingTasks, []);
             const pending = await task('Pending', { assignedUser: a._id });
             const done = await task('Done', { assignedUser: a._id, completed: true });
-            await request('DELETE', `/users/${a._id}`);
+            await request('DELETE', `/users/${a._id}`, undefined, 204);
             await request('GET', `/users/${a._id}`, undefined, 404);
             for (const id of [pending._id, done._id]) {
                 const result = await request('GET', `/tasks/${id}`);
